@@ -1,0 +1,19 @@
+{
+  "name": "gulp-imgsrc-to-inline-svg",
+  "version": "1.0.0",
+  "description": "Replace img src='*.svg' tag to inline svg sprite.",
+  "main": "./module.js",
+  "type": "module",
+  "author": {
+    "name": "Dmitry Karpovsky",
+    "email": "dmkarpovsky@gmail.com"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mrWhopper/gulp-imgsrc-to-inline-svg"
+  },
+  "dependencies": {
+    "through2": "^4.0.2"
+  }
+}
