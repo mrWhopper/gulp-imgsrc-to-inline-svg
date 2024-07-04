@@ -1,6 +1,6 @@
 {
   "name": "gulp-imgsrc-to-inline-svg",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Replace img src='*.svg' tag to inline svg sprite.",
   "main": "./module.js",
   "type": "module",

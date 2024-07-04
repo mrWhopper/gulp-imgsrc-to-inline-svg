@@ -10,6 +10,7 @@ const DEFAULTS = {
   preserveAspectRatio: 'none',
   removeFillColor: false,
   removeStrokeColor: false,
+  fileDir: null,
 };
 
 const main = (user_options) => {
@@ -30,7 +31,7 @@ const main = (user_options) => {
       options.keepSvgAttr[index] = `^${attrName}$`;
     });
 
-    const fileDir = file.base;
+    const fileDir = options.fileDir ? options.fileDir : file.base;
     let data = file.contents.toString();
 
     // Define regex

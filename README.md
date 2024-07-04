@@ -2,6 +2,12 @@
 
 Simple Gulp plugin for replace img src='*.svg' tag to inline svg sprite.
 
+## Install:
+
+```shell
+npm i -D gulp-imgsrc-to-inline-svg
+```
+
 ## Usage:
 
 ```js
@@ -33,3 +39,5 @@ export default htmlProcessing;
 `removeFillColor`: Default false.
 
 `removeStrokeColor`: Default false.
+
+`fileDir`: Default null. Use this parameter when the previous pipe changes the directory where the original html is located.
