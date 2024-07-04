@@ -120,7 +120,15 @@ const main = (user_options) => {
 
       // put svg attributes to symbol
       if (!twin) {
-        let symbol = `<symbol id="${id}" ${svgAttributes[imgTagIndex].join(' ')}>${svg.match(svgTagContent)[0]}</symbol>`;
+        let symbol = `<symbol id="${
+            id
+          }"${
+            svgAttributes[imgTagIndex].length > 0 ? ' ' : ''
+          }${
+            svgAttributes[imgTagIndex].join(' ')
+          }>${
+            svg.match(svgTagContent)[0]
+          }</symbol>`;
         // remove fills and strokes
         if (options.removeFillColor) {
           symbol = symbol.replace(fillRegex, '');
@@ -133,7 +141,13 @@ const main = (user_options) => {
       }
 
       // put img attributes to svg tag
-      svg = `<svg ${imgAttributes[imgTagIndex].join(' ')}><use href="#${id}"/></svg>`;
+      svg = `<svg${
+          imgAttributes[imgTagIndex].length > 0 ? ' ' : ''
+        }${
+          imgAttributes[imgTagIndex].join(' ')
+        }><use href="#${
+          id
+        }"/></svg>`;
 
       svgs.push(svg);
     });
