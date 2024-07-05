@@ -8,9 +8,11 @@ const DEFAULTS = {
   keepImgAttr: ['class', 'id'],
   keepSvgAttr: ['viewBox', 'style'],
   preserveAspectRatio: 'none',
-  removeFillColor: false,
-  removeStrokeColor: false,
+  removeFillColor: true,
+  removeStrokeColor: true,
   fileDir: null,
+  keepFillsAttrName: 'keepFills',
+  keepStrokesAttrName: 'keepStrokes',
 };
 
 const main = (user_options) => {
@@ -38,7 +40,7 @@ const main = (user_options) => {
     const imageTagRegex = /<img[^>]*src=('|")[^>]*\.svg('|")[^>]*>/gims;
     const keepingImgAttrRegex = new RegExp(options.keepImgAttr.join('|'), 'i');
     const keepingSvgAttrRegex = new RegExp(options.keepSvgAttr.join('|'), 'i');
-    const attributeRegex = /[\w/:.%;-]*=('|")[\w\s.:;/%-]*('|")/gms;
+    const attributeRegex = /([\w/:.%;-]*=('|")[\w\s.:;/%-]*('|"))|((?<=\s)[^<>\s'"=,]*(?=(\s|>)))/gms;
     const srcRegex = /src/i;
     const svgTagRegex = /<svg.*?>/gims;
     const svgTagContent = /(?<=<svg\s[^>]*>).*(?=<\/svg>)/gims;
@@ -46,13 +48,22 @@ const main = (user_options) => {
     const attrNameRegex = /[\w:._-]*(?==('|"))/;
     const attrValueRegex = /(?<==('|"))[\w\s:;./%_-]*(?=('|"))/;
     const preserveAspectRatioRegex = /preserveAspectRatio/;
-    const fillRegex = /fill\s*?:\s*?#?[\w\s]*;?/gi;
-    const strokeRegex = /stroke\s*?:\s*?#?[\w\s]*;?/gi;
+    const fillRegex = /fill\s?[:=]['"]?\s?#?[\w\s]*;?['"]?/gi;
+    const strokeRegex = /stroke\s?[:=]['"]?\s?#?[\w\s]*;?['"]?/gi;
     const emptyStyleAttrRegex = /style=('|")[\s\n]*('|")/gi;
     const indentBodyCloseRegex = /^(\s|\t)*(?=<\/body>)/gim;
+    const isNotBoolAttributeRegex = /=('|")/;
 
     // get srcs and svg files
     const imgs = data.match(imageTagRegex);
+
+    // if img tag with svg src not found - return data to pipe and return
+    if (imgs === null) {
+      file.contents = new Buffer.from(data);
+      cb(null, file);
+      return;
+    }
+
     const imgAttributes = [];
     const svgAttributes = [];
     const srcAttributes = [];
@@ -63,31 +74,64 @@ const main = (user_options) => {
       // Extract img tag attributes
       const rawImgAttributes = imgTag.match(attributeRegex);
       let svgFilePath;
-      let twin = false;
+      let keepFills = false;
+      let keepStrokes = false;
 
       imgAttributes[imgTagIndex] = [];
       svgAttributes[imgTagIndex] = [];
 
+      const src = []
+
       rawImgAttributes.forEach((attr) => {
-        const attrName = attr.match(attrNameRegex)[0];
-        const attrValue = attr.match(attrValueRegex)[0];
+        const isNotBoolAttr = isNotBoolAttributeRegex.test(attr);
+
+        let attrName, attrValue;
+        if (isNotBoolAttr) {
+          attrName = attr.match(attrNameRegex)[0];
+          attrValue = attr.match(attrValueRegex)[0];
+        } else {
+          attrName = attr;
+          attrValue = 'true';
+        }
 
         if (srcRegex.test(attrName)) {
           svgFilePath = attrValue;
-          if (srcAttributes.includes(svgFilePath)) twin = true;
-          srcAttributes[imgTagIndex] = attrValue;
+          src[0] = attrValue;
+          return;
+        }
+        if (attrName === options.keepFillsAttrName) {
+          src[1] = true;
+          keepFills = true;
+          return;
+        }
+        if (attrName === options.keepStrokesAttrName){
+          src[2] = true;
+          keepStrokes = true;
           return;
         }
 
         if (keepingImgAttrRegex.test(attrName)) {
-          imgAttributes[imgTagIndex].push(`${attrName}="${attrValue}"`);
+          if (isNotBoolAttr) {
+            imgAttributes[imgTagIndex].push(`${attrName}="${attrValue}"`);
+          } else {
+            imgAttributes[imgTagIndex].push(`${attrName}`);
+          }
         }
       });
 
-      // compose svg file abs path
-      const svgAbsPath = path.join(fileDir, svgFilePath);
+      // check twins and store src
+      let twin = false;
+      srcAttributes.some((srcAttr) => {
+        if (srcAttr[0] === src[0] && srcAttr[1] === src[1] && srcAttr[2] === src[2]) {
+          twin = true;
+          return true;
+        }
+        return false;
+      });
+      srcAttributes.push(src);
 
       // load svg
+      const svgAbsPath = path.join(fileDir, svgFilePath);
       let svg = fs.readFileSync(svgAbsPath, { encoding: 'utf8', flag: 'r' }).split('\n');
       svg.forEach((_, index) => {
         svg[index] = svg[index].trim();
@@ -98,8 +142,8 @@ const main = (user_options) => {
       // Extract svg file attributes
       const svgTag = svg.match(svgTagRegex)[0];
       const rawSvgAttributes = svgTag.match(attributeRegex);
-      let preserveAspectRatio = options.preserveAspectRatio;
 
+      let preserveAspectRatio = options.preserveAspectRatio;
       rawSvgAttributes.forEach((attr) => {
         const attrName = attr.match(attrNameRegex)[0];
         const attrValue = attr.match(attrValueRegex)[0];
@@ -112,11 +156,15 @@ const main = (user_options) => {
           svgAttributes[imgTagIndex].push(`${attrName}="${attrValue}"`);
         }
       });
-
       svgAttributes[imgTagIndex].push(`preserveAspectRatio="${preserveAspectRatio}"`);
 
-      // set filename as id
-      const id = srcAttributes[imgTagIndex].split('/').pop();
+      // generate id
+      const simpleHash = [...srcAttributes[imgTagIndex][0]].reduce((prev, char, index) => {
+        return prev + char.charCodeAt(0) * index;
+      }, 0);
+      const fillOpt = srcAttributes[imgTagIndex][1] ? '1' : '';
+      const strokeOpt = srcAttributes[imgTagIndex][2] ? '1' : '';
+      const id = simpleHash.toString() + fillOpt + strokeOpt + '-' + srcAttributes[imgTagIndex][0].split('/').pop();
 
       // put svg attributes to symbol
       if (!twin) {
@@ -130,10 +178,10 @@ const main = (user_options) => {
             svg.match(svgTagContent)[0]
           }</symbol>`;
         // remove fills and strokes
-        if (options.removeFillColor) {
+        if (options.removeFillColor && !keepFills) {
           symbol = symbol.replace(fillRegex, '');
         }
-        if (options.removeStrokeColor) {
+        if (options.removeStrokeColor && !keepStrokes) {
           symbol = symbol.replace(strokeRegex, '');
         }
         symbol = symbol.replace(emptyStyleAttrRegex, '');
@@ -156,7 +204,7 @@ const main = (user_options) => {
     srcAttributes.forEach((val, index) => {
       const imgSrcRegex = new RegExp(
         // generate dynamic regex for image tag with src = 'val' value
-        `<img[^>]*src=('|")${val.replace(/\//g, '\\/')}('|")[^>]*>`,
+        `<img[^>]*src=('|")${val[0].replace(/\//g, '\\/')}('|")[^>]*>`,
         'ms',
       );
       data = data.replace(imgSrcRegex, svgs[index]);

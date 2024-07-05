@@ -18,14 +18,28 @@ export const htmlProcessing = () => {
   return gulp.src('./src/**/*.html')
     .pipe(
       imgSrcToInlineSVG({
-        removeFillColor: true,
-        removeStrokeColor: true,
+        // Options here
       }),
     )
     .pipe(gulp.dest('dist'));
 };
 
 export default htmlProcessing;
+```
+### What this will do:
+```html
+    ...
+    <img class="svg" src="./some.svg">
+  </body>
+</html>
+```
+Will be transformed to:
+```html
+    ...
+    <svg class="svg"><use href="#some.svg"/></svg>
+    <svg class="svg-lib"><symbol id="some.svg" viewBox="0 0 ...
+  </body>
+</html>
 ```
 
 ## Options:
@@ -36,8 +50,12 @@ export default htmlProcessing;
 
 `preserveAspectRatio`: 'none' - if keepSvgAttr and svg file not contain preserveAspectRatio attribute - that value will be used. Other values here: https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute/preserveAspectRatio.
 
-`removeFillColor`: Default false.
+`removeFillColor`: Default true.
 
-`removeStrokeColor`: Default false.
+`removeStrokeColor`: Default true.
 
 `fileDir`: Default null. Use this parameter when the previous pipe changes the directory where the original html is located.
+
+`keepFillsAttrName`: 'keepFills' - default name of attribute in img tag that will disable deletion of fills colors in svg file.
+
+`keepStrokesAttrName`: 'keepStrokes' - default name of attribute in img tag that will disable deletion of stroke colors in svg file.
