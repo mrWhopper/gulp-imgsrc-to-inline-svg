@@ -164,7 +164,7 @@ const main = (user_options) => {
       }, 0);
       const fillOpt = srcAttributes[imgTagIndex][1] ? '1' : '0';
       const strokeOpt = srcAttributes[imgTagIndex][2] ? '1' : '0';
-      const id = simpleHash.toString() + fillOpt + strokeOpt + '-' + srcAttributes[imgTagIndex][0].split('/').pop().replace(/[^\w]/g, '-');
+      const id = srcAttributes[imgTagIndex][0].split('/').pop() + '-' + simpleHash.toString() + fillOpt + strokeOpt;
 
       // put svg attributes to symbol
       if (!twin) {
@@ -220,7 +220,7 @@ const main = (user_options) => {
     }
     data = data.replace(
       /<\/body>/,
-      `${bodyIndent}<svg class="svg-lib">${svglib.join()}</svg>${nl}${bodyIndent}</body>`,
+      `${bodyIndent}<svg class="svg-lib">${svglib.join('')}</svg>${nl}${bodyIndent}</body>`,
     );
 
     // return data to pipe
