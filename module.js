@@ -162,8 +162,8 @@ const main = (user_options) => {
       const simpleHash = [...srcAttributes[imgTagIndex][0]].reduce((prev, char, index) => {
         return prev + char.charCodeAt(0) * index;
       }, 0);
-      const fillOpt = srcAttributes[imgTagIndex][1] ? '1' : '';
-      const strokeOpt = srcAttributes[imgTagIndex][2] ? '1' : '';
+      const fillOpt = srcAttributes[imgTagIndex][1] ? '1' : '0';
+      const strokeOpt = srcAttributes[imgTagIndex][2] ? '1' : '0';
       const id = simpleHash.toString() + fillOpt + strokeOpt + '-' + srcAttributes[imgTagIndex][0].split('/').pop();
 
       // put svg attributes to symbol
