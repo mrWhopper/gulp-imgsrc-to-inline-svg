@@ -164,7 +164,7 @@ const main = (user_options) => {
       }, 0);
       const fillOpt = srcAttributes[imgTagIndex][1] ? '1' : '0';
       const strokeOpt = srcAttributes[imgTagIndex][2] ? '1' : '0';
-      const id = simpleHash.toString() + fillOpt + strokeOpt + '-' + srcAttributes[imgTagIndex][0].split('/').pop();
+      const id = simpleHash.toString() + fillOpt + strokeOpt + '-' + srcAttributes[imgTagIndex][0].split('/').pop().replace(/[^\w]/g, '-');
 
       // put svg attributes to symbol
       if (!twin) {
