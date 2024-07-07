@@ -51,7 +51,7 @@ The list of options has changed. If you used previous versions, please read it a
 
 `keepSvgAttr: ['viewBox', 'style']` - default value for the list of svg file attributes that will be copied to the symbol in sprite.
 
-`preserveAspectRatio`: 'none' - if keepSvgAttr and svg file not contain preserveAspectRatio attribute - that value will be used. Other values here: https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute/preserveAspectRatio.
+`preserveAspectRatio: 'none'` - if keepSvgAttr and svg file not contain preserveAspectRatio attribute - that value will be used. Other values here: https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute/preserveAspectRatio.
 
 `removeFillColor: true`: Default value.
 
