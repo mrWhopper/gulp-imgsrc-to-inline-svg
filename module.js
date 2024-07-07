@@ -5,7 +5,7 @@ import through from 'through2';
 
 const PLUGIN_NAME = 'gulp-module-template';
 const DEFAULTS = {
-  keepImgAttr: ['class', 'id'],
+  imgAttrToRemove: [],
   keepSvgAttr: ['viewBox', 'style'],
   preserveAspectRatio: 'none',
   removeFillColor: true,
@@ -13,6 +13,7 @@ const DEFAULTS = {
   fileDir: null,
   keepFillsAttrName: 'keepFills',
   keepStrokesAttrName: 'keepStrokes',
+  keepLinkedAttrName: 'keepLinked',
 };
 
 const main = (user_options) => {
@@ -26,8 +27,10 @@ const main = (user_options) => {
     }
 
     const options = Object.assign({}, DEFAULTS, user_options || {});
-    options.keepImgAttr.forEach((attrName, index) => {
-      options.keepImgAttr[index] = `^${attrName}$`;
+    options.imgAttrToRemove.push('src');
+    options.imgAttrToRemove.push('alt');
+    options.imgAttrToRemove.forEach((attrName, index) => {
+      options.imgAttrToRemove[index] = `^${attrName}$`;
     });
     options.keepSvgAttr.forEach((attrName, index) => {
       options.keepSvgAttr[index] = `^${attrName}$`;
@@ -37,8 +40,11 @@ const main = (user_options) => {
     let data = file.contents.toString();
 
     // Define regex
-    const imageTagRegex = /<img[^>]*src=('|")[^>]*\.svg('|")[^>]*>/gims;
-    const keepingImgAttrRegex = new RegExp(options.keepImgAttr.join('|'), 'i');
+    const imageTagRegex = new RegExp(
+      `<img(((?!${options.keepLinkedAttrName}))[^>])*src=['"][^>]*\.svg['"](((?!${options.keepLinkedAttrName}))[^>])*>`,
+      'gims'
+    );
+    const imgAttrToRemoveRegex = new RegExp(options.imgAttrToRemove.join('|'), 'i');
     const keepingSvgAttrRegex = new RegExp(options.keepSvgAttr.join('|'), 'i');
     const attributeRegex = /([\w/:.%;-]*=('|")[\w\s.:;/%-]*('|"))|((?<=\s)[^<>\s'"=,]*(?=(\s|>)))/gms;
     const srcRegex = /src/i;
@@ -53,6 +59,7 @@ const main = (user_options) => {
     const emptyStyleAttrRegex = /style=('|")[\s\n]*('|")/gi;
     const indentBodyCloseRegex = /^(\s|\t)*(?=<\/body>)/gim;
     const isNotBoolAttributeRegex = /=('|")/;
+    const keepLinkedAttrRegex = new RegExp(`(?<=<img[^>]*)\\s${options.keepLinkedAttrName}(?=[^>]*>)`, 'g');
 
     // get srcs and svg files
     const imgs = data.match(imageTagRegex);
@@ -110,7 +117,7 @@ const main = (user_options) => {
           return;
         }
 
-        if (keepingImgAttrRegex.test(attrName)) {
+        if (!imgAttrToRemoveRegex.test(attrName)) {
           if (isNotBoolAttr) {
             imgAttributes[imgTagIndex].push(`${attrName}="${attrValue}"`);
           } else {
@@ -204,7 +211,13 @@ const main = (user_options) => {
     srcAttributes.forEach((val, index) => {
       const imgSrcRegex = new RegExp(
         // generate dynamic regex for image tag with src = 'val' value
-        `<img[^>]*src=('|")${val[0].replace(/\//g, '\\/')}('|")[^>]*>`,
+        `<img((?!${
+            options.keepLinkedAttrName
+          })[^>])*src=['"]${
+            val[0].replace(/\//g, '\\/')
+          }['"]((?!${
+            options.keepLinkedAttrName
+          })[^>])*>`,
         'ms',
       );
       data = data.replace(imgSrcRegex, svgs[index]);
@@ -222,6 +235,9 @@ const main = (user_options) => {
       /<\/body>/,
       `${bodyIndent}<svg class="svg-lib">${svglib.join('')}</svg>${nl}${bodyIndent}</body>`,
     );
+
+    // remove keepLinked attr from ignored img tags
+    data = data.replace(keepLinkedAttrRegex, '');
 
     // return data to pipe
     file.contents = new Buffer.from(data);

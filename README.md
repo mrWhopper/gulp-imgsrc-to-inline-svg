@@ -29,33 +29,38 @@ export default htmlProcessing;
 ### What this will do:
 ```html
     ...
-    <img class="svg" src="./some.svg">
+    <img class="svg" src="./some1.svg" keepLinked>
+    <img class="svg" src="./some2.svg" keepFills keepStrokes>
   </body>
 </html>
 ```
 Will be transformed to:
 ```html
     ...
-    <svg class="svg"><use href="#some.svg"/></svg>
-    <svg class="svg-lib"><symbol id="some.svg" viewBox="0 0 ...
+    <img class="svg" src="./some1.svg">
+    <svg class="svg"><use href="#some2.svg-2690110"/></svg>
+    <svg class="svg-lib"><symbol id="some2.svg-2690110" viewBox="0 0 ...
   </body>
 </html>
 ```
 
 ## Options:
+The list of options has changed. If you used previous versions, please read it again. This version changes the handling of img tag attributes and adds the ability to leave svg files linked with img tag.
 
-`keepImgAttr`: ['class', 'id'] - default value for the list of image tag attributes that will be copied to the svg tag that replaces it.
+`imgAttrToRemove: []` - list of image tag attributes that will not be copied to the svg tag that replaces it ("src" and "alt" will be deleted anyway).
 
-`keepSvgAttr`: ['viewBox', 'style'] - default value for the list of svg file attributes that will be copied to the symbol in sprite.
+`keepSvgAttr: ['viewBox', 'style']` - default value for the list of svg file attributes that will be copied to the symbol in sprite.
 
 `preserveAspectRatio`: 'none' - if keepSvgAttr and svg file not contain preserveAspectRatio attribute - that value will be used. Other values here: https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute/preserveAspectRatio.
 
-`removeFillColor`: Default true.
+`removeFillColor: true`: Default value.
 
-`removeStrokeColor`: Default true.
+`removeStrokeColor: true`: Default value.
 
-`fileDir`: Default null. Use this parameter when the previous pipe changes the directory where the original html is located.
+`fileDir: null`: Default value. Use this parameter when the previous pipe changes the directory where the original html is located.
 
-`keepFillsAttrName`: 'keepFills' - default name of attribute in img tag that will disable deletion of fills colors in svg file.
+`keepFillsAttrName: 'keepFills'` - default name of attribute in img tag that will disable deletion of fills colors in svg file.
 
-`keepStrokesAttrName`: 'keepStrokes' - default name of attribute in img tag that will disable deletion of stroke colors in svg file.
+`keepStrokesAttrName: 'keepStrokes'` - default name of attribute in img tag that will disable deletion of stroke colors in svg file.
+
+`keepLinkedAttrName: 'keepLinked'` - default name of attribute in img tag that will prevent that tag from changes (attribute itself will be deleted).
